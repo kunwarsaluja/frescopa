@@ -466,6 +466,7 @@ header:has(> .header) {
 
 .header .chrome-market li {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: var(--gap-s);
   padding: var(--gap-2xs) var(--gap-xs);
@@ -483,6 +484,7 @@ header:has(> .header) {
 }
 
 .header .chrome-market-badge {
+  flex: none;
   padding: 0.1em 0.6em;
   border-radius: var(--radius-pill);
   background: var(--color-accent-soft);
