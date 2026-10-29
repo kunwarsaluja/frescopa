@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Frescopa//Events//EN
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:open-house-new-york-2026@frescopa
+DTSTAMP:20261029T000000Z
+DTSTART;TZID=America/New_York:20261106T183000
+DTEND;TZID=America/New_York:20261106T213000
+SUMMARY:Frescopa Open House · New York
+DESCRIPTION:An evening with our makers: live demos\, short talks and good food. Free\, places are limited.
+LOCATION:Frescopa House SoHo\, 112 Greene Street\, New York\, NY 10012
+URL:https://main--frescopa--kunwarsaluja.aem.page/en/us/events/open-house
+END:VEVENT
+END:VCALENDAR
