@@ -1,4 +1,9 @@
-/* Social share: floating dock — bottom bar on mobile, side rail from 900px */
+/* Social share: floating dock — bottom bar on mobile, side rail from 900px.
+   The dock is fixed, so its injected section must not take up space in the flow. */
+main > .section.social-share-container {
+  padding-block: 0;
+}
+
 main .social-share {
   position: fixed;
   inset: auto auto calc(env(safe-area-inset-bottom, 0px) + var(--gap-s)) 50%;
