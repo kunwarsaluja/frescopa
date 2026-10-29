@@ -239,7 +239,7 @@ function buildBreadcrumbs(main) {
     const [label, href] = parent.split('|').map((v) => v.trim());
     crumb(label, href);
   } else {
-    segments.slice(0, -1).forEach((seg, i) => crumb(titleCase(seg), `${root}${segments.slice(0, i + 1).join('/')}/`));
+    segments.slice(0, -1).forEach((seg, i) => crumb(titleCase(seg), `${root}${segments.slice(0, i + 1).join('/')}`));
   }
   const h1 = main.querySelector('h1')?.textContent.trim();
   crumb(getMetadata('breadcrumb-title') || h1 || titleCase(segments.at(-1)));
