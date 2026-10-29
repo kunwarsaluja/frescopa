@@ -41,10 +41,10 @@ export default async function decorate(block) {
     }
 
     if (say?.textContent.trim()) {
-      const p = createTag('div', { class: 'journey-steps-say' }, [
+      const p = createTag('p', { class: 'journey-steps-say' }, [
         createTag('strong', {}, `${label('say')}: `),
+        say.textContent.trim(),
       ]);
-      p.append(...say.childNodes);
       item.append(p);
     }
 

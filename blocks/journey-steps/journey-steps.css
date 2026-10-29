@@ -3,16 +3,22 @@
   gap: var(--gap-m);
   margin: 0;
   padding-left: 1.5rem;
-  list-style: decimal;
+  list-style: none;
+  counter-reset: step;
 }
 
 .journey-steps .journey-steps-item {
+  counter-increment: step;
+  position: relative;
   display: grid;
   gap: var(--gap-2xs);
   padding-left: var(--gap-2xs);
 }
 
-.journey-steps .journey-steps-item::marker {
+.journey-steps .journey-steps-item::before {
+  content: counter(step) ".";
+  position: absolute;
+  left: -1.5rem;
   font-weight: var(--weight-bold);
 }
 
