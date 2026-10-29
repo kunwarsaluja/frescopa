@@ -1,0 +1,129 @@
+/* Teaser block – Heritage Elite */
+
+main .teaser {
+  background: var(--color-surface-sunken);
+  border: var(--border);
+  border-radius: var(--radius-l);
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--step-0);
+  font-weight: 500;
+  color: var(--color-text-strong);
+  transition: transform 0.5s var(--ease-out),
+    box-shadow 0.5s ease,
+    border-color 0.4s ease;
+}
+
+main .teaser:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-2);
+  border-color: var(--color-accent);
+}
+
+main .teaser > div {
+  align-items: center;
+  gap: var(--gap-2xs);
+  padding: var(--gap-m) var(--gutter);
+}
+
+main .teaser > div > div a {
+  color: var(--color-link);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: var(--color-accent);
+  padding-inline-start: 0.5em;
+  transition: color 0.3s, text-decoration-color 0.3s;
+}
+
+main .teaser > div > div a:hover {
+  color: var(--color-link-hover);
+  text-decoration-color: var(--color-accent);
+}
+
+@media (width >= 900px) {
+  main .teaser > div {
+    padding: var(--gap-l) var(--gap-xl);
+  }
+}
+
+/* Login teaser variant: image backdrop + overlapping teaser card */
+main .section.login-teaser-image {
+    position: relative;
+    min-height: 18.75rem;
+    max-width: min(100% - 2 * var(--gutter), var(--container));
+    margin: var(--gap-l) auto;
+    padding: 0 var(--gutter);
+    overflow: hidden;
+    border-radius: var(--radius-l);
+  }
+  
+  main .section.login-teaser-image > .default-content-wrapper {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  main .section.login-teaser-image > .default-content-wrapper p {
+    margin: 0;
+    height: 100%;
+  }
+  
+  main .section.login-teaser-image > .default-content-wrapper picture {
+    display: block;
+    height: 100%;
+  }
+  
+  main .section.login-teaser-image > .default-content-wrapper picture img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+  
+  main .section.login-teaser-image > .teaser-wrapper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 18.75rem;
+    padding: var(--gap-m);
+  }
+  
+  main .section.login-teaser-image > .teaser-wrapper .teaser {
+    max-width: min(40rem, 100%);
+    margin: 0 auto;
+    box-shadow: var(--shadow-3);
+  }
+  
+  main .section.login-teaser-image > .teaser-wrapper .teaser h4 {
+    margin-top: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+  }
+  
+  main .section.login-teaser-image > .teaser-wrapper .teaser .icon-lock {
+    width: 2rem;
+    height: 2rem;
+    margin: 0;
+    vertical-align: baseline;
+  }
+  
+  @media (width >= 900px) {
+    main .section.login-teaser-image,
+    main .section.login-teaser-image > .teaser-wrapper {
+      min-height: 25rem;
+    }
+  
+    main .section.login-teaser-image > .teaser-wrapper {
+      padding: var(--gap-l);
+    }
+  }

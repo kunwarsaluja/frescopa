@@ -1,0 +1,79 @@
+/* Modal – opens fragment links in a dialog */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--gap-2xs);
+}
+
+.modal[hidden],
+.modal.block {
+  display: none;
+}
+
+.modal .modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--ink-1000) 50%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.modal .modal-dialog {
+  position: relative;
+  width: min(920px, calc(100vw - var(--gap-l)));
+  max-height: calc(100vh - var(--gap-l));
+  margin: 0;
+  overflow: auto;
+  border-radius: var(--radius-l);
+  border: var(--border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-3);
+  padding: var(--gap-l);
+}
+
+.modal .modal-close {
+  position: sticky;
+  top: 0;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: var(--border);
+  border-radius: 999px;
+  background: var(--color-surface-sunken);
+  color: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.25s, transform 0.25s, border-color 0.25s;
+}
+
+.modal .modal-close:hover {
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  transform: scale(1.08);
+}
+
+.modal .modal-content .modal-main {
+  display: block;
+  min-height: 0;
+  max-width: 100%;
+  padding: 0;
+}
+
+.modal .modal-content .modal-main > div,
+.modal .modal-content .modal-main div[data-status] {
+  display: block;
+}
+
+@media (width >= 600px) {
+  .modal {
+    padding: var(--gap-s);
+  }
+}
