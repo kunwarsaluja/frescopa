@@ -1,7 +1,6 @@
 import { readBlockConfig } from '../../scripts/aem.js';
 
 const DEFAULT_SOURCE = '/studio/journeys.json';
-const ALL = '__all';
 const requests = new Map();
 
 const splitList = (value) => String(value || '').split(',').map((v) => v.trim()).filter(Boolean);
@@ -80,180 +79,89 @@ function slug(value) {
 
 function createContext(data) {
   const capById = new Map(data.capabilities.map((cap) => [cap.id, cap]));
+  const statusById = new Map(data.statuses.map((s) => [s.id, s]));
   const label = (key, vars = {}) => {
     const raw = data.labels?.[key] || key;
     return Object.entries(vars).reduce((str, [k, v]) => str.replace(`{${k}}`, v), raw);
   };
-  const journeyCaps = (journey) => {
-    const ids = new Set();
-    journey.steps.forEach((step) => (step.capabilities || []).forEach((id) => ids.add(id)));
-    return [...ids].map((id) => capById.get(id)).filter(Boolean);
-  };
-  const journeyProducts = (journey) => {
-    const products = new Set();
-    journeyCaps(journey).forEach((cap) => cap.products.forEach((p) => products.add(p)));
-    return products;
-  };
+  const stepCaps = (step) => (step.capabilities || []).map((id) => capById.get(id)).filter(Boolean);
+  const journeyCaps = (journey) => [...new Set(journey.steps.flatMap(stepCaps))];
+  const journeyProducts = (journey) => [...new Set(journeyCaps(journey).flatMap((c) => c.products))];
   return {
-    data, capById, label, journeyCaps, journeyProducts,
+    data, statusById, label, stepCaps, journeyCaps, journeyProducts,
   };
 }
 
-const statusBadge = (status) => el('span', { className: `journeys-status journeys-status-${slug(status)}`, text: status });
-const productTag = (product) => el('span', { className: 'journeys-product', text: product });
-
-/* ---------- Journeys (filters, cards, detail) ---------- */
+/* ---------- Journeys: list view and talk-track view ---------- */
 
 function renderJourneys(block, ctx) {
   const {
-    data, capById, label, journeyCaps, journeyProducts,
+    data, statusById, label, stepCaps, journeyProducts,
   } = ctx;
-  const state = { filters: { group: ALL, product: ALL, industry: ALL }, activeId: null };
   const uid = `journeys-${Math.floor(Math.random() * 1e6)}`;
+  let industry = '';
 
-  const dimensions = [
-    {
-      key: 'group',
-      label: label('groupFilter'),
-      options: data.capabilityGroups.map((g) => ({ id: g.id, name: g.id, title: g.summary })),
-      matches: (journey, value) => journeyCaps(journey).some((cap) => cap.group === value),
-    },
-    {
-      key: 'product',
-      label: label('productFilter'),
-      options: data.products.map((p) => ({ id: p.id, name: p.id, title: p.name })),
-      matches: (journey, value) => journeyProducts(journey).has(value),
-    },
-    {
-      key: 'industry',
-      label: label('industryFilter'),
-      options: [...new Set(data.journeys.flatMap((j) => j.industryHints || []))].sort()
-        .map((i) => ({ id: i, name: i })),
-      matches: (journey, value) => (journey.industryHints || []).includes(value),
-    },
-  ];
-
-  const matchesFilters = (journey) => dimensions
-    .every((d) => state.filters[d.key] === ALL || d.matches(journey, state.filters[d.key]));
-
-  const filters = el('div', { className: 'journeys-filters' });
+  const industries = [...new Set(data.journeys.flatMap((j) => j.industryHints || []))].sort();
+  const select = el('select', { id: `${uid}-industry`, className: 'journeys-select' }, [
+    el('option', { value: '', text: label('allFilter') }),
+    ...industries.map((i) => el('option', { value: i, text: i })),
+  ]);
+  const toolbar = el('div', { className: 'journeys-toolbar' }, [
+    el('label', { for: select.id, text: label('industryFilter') }),
+    select,
+  ]);
   const count = el('p', { className: 'journeys-count', role: 'status', 'aria-live': 'polite' });
-  const list = el('ul', { className: 'journeys-grid' });
-  const detail = el('section', {
-    className: 'journeys-detail', id: `${uid}-detail`, tabindex: '-1', hidden: true,
-  });
+  const list = el('ol', { className: 'journeys-list' });
+  const listView = el('div', { className: 'journeys-list-view' }, [toolbar, count, list]);
+  const detail = el('article', { className: 'journeys-detail', tabindex: '-1', hidden: true });
 
-  let renderList;
-  let closeJourney;
-
-  function renderFilters() {
-    filters.replaceChildren();
-    dimensions.forEach((dim) => {
-      const labelId = `${uid}-${dim.key}`;
-      const chips = el('div', { className: 'journeys-chips' });
-      [{ id: ALL, name: label('allFilter') }, ...dim.options].forEach((option) => {
-        const chip = el('button', {
-          type: 'button',
-          className: 'journeys-chip',
-          'aria-pressed': String(state.filters[dim.key] === option.id),
-          title: option.title || null,
-          dataset: { value: option.id },
-          text: option.name,
-        });
-        chip.addEventListener('click', () => {
-          state.filters[dim.key] = option.id;
-          chips.querySelectorAll('.journeys-chip').forEach((c) => {
-            c.setAttribute('aria-pressed', String(c.dataset.value === option.id));
-          });
-          renderList();
-        });
-        chips.append(chip);
-      });
-      filters.append(el('div', { className: 'journeys-filter', role: 'group', 'aria-labelledby': labelId }, [
-        el('span', { id: labelId, className: 'journeys-filter-label', text: dim.label }),
-        chips,
-      ]));
-    });
-  }
-
-  renderList = () => {
-    const visible = data.journeys.filter(matchesFilters);
-    list.replaceChildren();
-    visible.forEach((journey, index) => {
-      const isActive = journey.id === state.activeId;
-      const button = el('button', {
-        type: 'button',
-        className: 'journeys-card-button',
-        'aria-expanded': String(isActive),
-        'aria-controls': detail.id,
-        dataset: { journey: journey.id },
-      }, [
-        el('span', { className: 'journeys-card-index', 'aria-hidden': 'true', text: String(index + 1).padStart(2, '0') }),
-        el('span', { className: 'journeys-card-eyebrow', text: label('problem') }),
-        el('q', { className: 'journeys-card-quote', text: journey.problem.quote }),
-        el('span', { className: 'journeys-card-persona', text: journey.problem.persona }),
-        el('span', { className: 'journeys-card-title' }, [
-          el('span', { className: 'journeys-card-arrow', 'aria-hidden': 'true', text: '→' }),
-          ` ${journey.title}`,
-        ]),
-        el('span', { className: 'journeys-card-meta' }, [
-          el('span', { text: `${journey.steps.length} ${label('steps')}` }),
-          el('span', { className: 'journeys-tags' }, [...journeyProducts(journey)].map(productTag)),
-        ]),
-      ]);
-      button.addEventListener('click', () => {
-        if (state.activeId === journey.id) closeJourney();
-        else window.location.hash = journey.id;
-      });
-      list.append(el('li', { className: `journeys-card${isActive ? ' is-active' : ''}` }, button));
-    });
+  function renderList() {
+    const visible = data.journeys.filter((j) => !industry || (j.industryHints || []).includes(industry));
+    list.replaceChildren(...visible.map((journey) => el('li', {}, el('a', {
+      className: 'journeys-row', href: `#${journey.id}`,
+    }, [
+      el('span', { className: 'journeys-row-title', text: journey.title }),
+      el('span', { className: 'journeys-row-quote', text: `“${journey.problem.quote}”` }),
+      el('span', {
+        className: 'journeys-row-meta',
+        text: `${journey.problem.persona} · ${journey.steps.length} ${label('steps')}`,
+      }),
+    ]))));
     count.textContent = visible.length
       ? label('showing', { count: visible.length, total: data.journeys.length })
       : label('noResults');
-  };
-
-  function renderCapabilityChip(capId) {
-    const cap = capById.get(capId);
-    if (!cap) return null;
-    return el('li', { className: 'journeys-cap-chip', title: cap.summary }, [
-      el('span', { text: cap.name }),
-      statusBadge(cap.status),
-    ]);
   }
 
-  function renderStep(step, index) {
-    const products = new Set();
-    (step.capabilities || []).forEach((id) => capById.get(id)?.products.forEach((p) => products.add(p)));
+  function cautions(step) {
+    return stepCaps(step)
+      .filter((cap) => cap.status && cap.status !== 'Current')
+      .map((cap) => el('p', { className: 'journeys-caution' }, [
+        el('strong', { text: `${cap.name}: ${cap.status}.` }),
+        ` ${statusById.get(cap.status)?.description || ''}`,
+      ]));
+  }
+
+  function renderStep(step) {
+    const caps = stepCaps(step);
     return el('li', { className: 'journeys-step' }, [
-      el('span', { className: 'journeys-step-n', 'aria-hidden': 'true', text: String(index + 1) }),
-      el('div', { className: 'journeys-step-body' }, [
-        el('div', { className: 'journeys-step-head' }, [
-          el('h4', { className: 'journeys-step-title', text: step.title }),
-          el('a', {
-            className: 'journeys-step-open', href: step.page, target: '_blank', rel: 'noopener',
-          }, [
-            label('openPage'),
-            el('span', { 'aria-hidden': 'true', text: ' ↗' }),
-            el('span', { className: 'visually-hidden', text: ` ${label('newTab')}` }),
-          ]),
-        ]),
-        el('code', { className: 'journeys-step-path', text: step.page }),
-        el('p', { className: 'journeys-step-narrative', text: `“${step.narrative}”` }),
-        el('div', { className: 'journeys-step-meta' }, [
-          el('div', {}, [
-            el('h5', { className: 'journeys-label', text: label('capabilities') }),
-            el('ul', { className: 'journeys-cap-chips' }, (step.capabilities || []).map(renderCapabilityChip)),
-          ]),
-          step.recipes?.length ? el('div', {}, [
-            el('h5', { className: 'journeys-label', text: label('recipes') }),
-            el('ul', { className: 'journeys-recipes' }, step.recipes.map((r) => el('li', { text: r }))),
-          ]) : null,
-          products.size ? el('p', { className: 'journeys-step-products' }, [
-            el('span', { className: 'journeys-label', text: label('supportedBy') }),
-            ...[...products].map(productTag),
-          ]) : null,
+      el('div', { className: 'journeys-step-head' }, [
+        el('h4', { text: step.title }),
+        el('a', {
+          className: 'button', href: step.page, target: '_blank', rel: 'noopener',
+        }, [
+          label('openPage'),
+          el('span', { className: 'visually-hidden', text: ` ${label('newTab')}` }),
         ]),
       ]),
+      el('p', { className: 'journeys-say' }, [
+        el('span', { className: 'journeys-key', text: `${label('say')}: ` }),
+        step.narrative,
+      ]),
+      caps.length ? el('p', { className: 'journeys-shows' }, [
+        el('span', { className: 'journeys-key', text: `${label('capabilities')}: ` }),
+        caps.map((c) => c.name).join(' · '),
+      ]) : null,
+      ...cautions(step),
     ]);
   }
 
@@ -271,137 +179,114 @@ function renderJourneys(block, ctx) {
   }
 
   function renderDetail(journey) {
-    const titleId = `${uid}-title-${journey.id}`;
-    const copyButton = el('button', { type: 'button', className: 'journeys-ghost', text: label('copyLink') });
-    copyButton.addEventListener('click', () => copyLink(copyButton, journey.id));
-    const closeButton = el('button', { type: 'button', className: 'journeys-ghost', text: label('close') });
-    closeButton.addEventListener('click', () => closeJourney());
-
-    const problem = el('div', { className: 'journeys-problem' }, [
-      el('p', { className: 'journeys-stage', text: `1 · ${label('problem')}` }),
-      el('blockquote', { className: 'journeys-problem-quote' }, el('p', { text: `“${journey.problem.quote}”` })),
-      el('p', { className: 'journeys-problem-persona', text: `— ${journey.problem.persona}` }),
-      el('p', { className: 'journeys-problem-context', text: journey.problem.context }),
-      journey.industryHints?.length ? el('p', { className: 'journeys-industries' }, [
-        el('span', { className: 'journeys-label', text: label('industries') }),
-        ...journey.industryHints.map((i) => el('span', { className: 'journeys-industry', text: i })),
-      ]) : null,
-    ]);
-
-    const steps = el('div', { className: 'journeys-steps' }, [
-      el('p', { className: 'journeys-stage', text: `2 · ${label('journey')}` }),
-      el('ol', { className: 'journeys-step-list' }, journey.steps.map(renderStep)),
-    ]);
-
-    const outcome = el('div', { className: 'journeys-outcome' }, [
-      el('p', { className: 'journeys-stage', text: `3 · ${label('outcome')}` }),
-      el('p', { className: 'journeys-outcome-headline', text: journey.outcome.headline }),
-      el('dl', { className: 'journeys-metrics' }, journey.outcome.metrics.map((m) => el('div', { className: 'journeys-metric' }, [
-        el('dt', { text: m.label }),
-        el('dd', { text: m.value }),
-      ]))),
-      el('p', { className: 'journeys-outcome-note', text: label('metricsNote') }),
+    const back = el('a', { className: 'journeys-back', href: '#journeys-list', text: `← ${label('back')}` });
+    back.addEventListener('click', (event) => {
+      event.preventDefault();
+      window.history.pushState(null, '', window.location.pathname + window.location.search);
+      sync();
+    });
+    const copy = el('button', { type: 'button', className: 'button secondary', text: label('copyLink') });
+    copy.addEventListener('click', () => copyLink(copy, journey.id));
+    const section = (heading, children) => el('section', { className: 'journeys-part' }, [
+      el('h4', { className: 'journeys-part-title', text: heading }), ...children,
     ]);
 
     detail.replaceChildren(
-      el('div', { className: 'journeys-detail-head' }, [
-        el('h3', { id: titleId, className: 'journeys-detail-title', text: journey.title }),
-        el('div', { className: 'journeys-detail-actions' }, [copyButton, closeButton]),
+      el('div', { className: 'journeys-detail-bar' }, [back, copy]),
+      el('h3', { className: 'journeys-detail-title', text: journey.title }),
+      el('p', { className: 'journeys-detail-meta' }, [
+        journey.problem.persona,
+        journey.industryHints?.length ? ` · ${label('industries')}: ${journey.industryHints.join(', ')}` : '',
       ]),
-      el('div', { className: 'journeys-detail-layout' }, [problem, steps, outcome]),
+      section(`1. ${label('problem')}`, [
+        el('blockquote', {}, el('p', { text: `“${journey.problem.quote}”` })),
+        el('p', { text: journey.problem.context }),
+      ]),
+      section(`2. ${label('journey')} (${journey.steps.length} ${label('steps')})`, [
+        el('ol', { className: 'journeys-steps' }, journey.steps.map(renderStep)),
+      ]),
+      section(`3. ${label('outcome')}`, [
+        el('p', { className: 'journeys-outcome', text: journey.outcome.headline }),
+        el('ul', { className: 'journeys-metrics' }, journey.outcome.metrics.map((m) => el('li', {}, [
+          el('strong', { text: m.value }), ` ${m.label}`,
+        ]))),
+        el('p', { className: 'journeys-note', text: label('metricsNote') }),
+      ]),
+      el('p', { className: 'journeys-products' }, [
+        el('span', { className: 'journeys-key', text: `${label('supportedBy')}: ` }),
+        journeyProducts(journey).join(', '),
+      ]),
     );
-    detail.setAttribute('aria-labelledby', titleId);
-    detail.hidden = false;
   }
 
-  closeJourney = () => {
-    const previous = state.activeId;
-    state.activeId = null;
-    detail.hidden = true;
-    detail.replaceChildren();
-    window.history.replaceState(null, '', window.location.pathname + window.location.search);
-    renderList();
-    const card = previous && list.querySelector(`[data-journey="${CSS.escape(previous)}"]`);
-    if (card) card.focus();
-  };
-
-  function syncFromHash({ scroll = true } = {}) {
+  function sync({ scroll = true } = {}) {
     const id = decodeURIComponent(window.location.hash.slice(1));
     const journey = data.journeys.find((j) => j.id === id);
-    if (!journey) {
-      // Only an empty hash (e.g. browser Back) closes the panel; in-page anchors leave it open.
-      if (!id && state.activeId) {
-        state.activeId = null;
-        detail.hidden = true;
-        renderList();
+    if (journey) {
+      renderDetail(journey);
+      listView.hidden = true;
+      detail.hidden = false;
+      if (scroll) {
+        block.scrollIntoView({ block: 'start' });
+        detail.focus({ preventScroll: true });
       }
       return;
     }
-    state.activeId = journey.id;
-    if (!matchesFilters(journey)) {
-      dimensions.forEach((d) => { state.filters[d.key] = ALL; });
-      renderFilters();
-    }
-    renderList();
-    renderDetail(journey);
-    if (scroll) {
-      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      detail.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-      detail.focus({ preventScroll: true });
+    if (!id && !detail.hidden) {
+      detail.hidden = true;
+      listView.hidden = false;
+      if (scroll) block.scrollIntoView({ block: 'start' });
     }
   }
 
-  renderFilters();
-  renderList();
-  block.replaceChildren(filters, count, list, detail);
-  syncFromHash({ scroll: Boolean(window.location.hash) });
-  window.addEventListener('hashchange', () => syncFromHash());
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && state.activeId) closeJourney();
+  select.addEventListener('change', () => {
+    industry = select.value;
+    renderList();
   });
+
+  renderList();
+  block.replaceChildren(listView, detail);
+  sync({ scroll: Boolean(window.location.hash) });
+  window.addEventListener('hashchange', () => sync());
+  window.addEventListener('popstate', () => sync());
 }
 
-/* ---------- Capability map ---------- */
+/* ---------- Capability map: one plain table ---------- */
 
 function renderMap(block, ctx) {
   const { data, label, journeyCaps } = ctx;
   const usage = new Map();
-  data.journeys.forEach((journey) => {
-    journeyCaps(journey).forEach((cap) => usage.set(cap.id, (usage.get(cap.id) || 0) + 1));
-  });
+  data.journeys.forEach((j) => journeyCaps(j).forEach((c) => usage.set(c.id, (usage.get(c.id) || 0) + 1)));
 
-  const legend = el('ul', { className: 'journeys-legend' }, data.statuses.map((s) => el('li', {}, [
-    statusBadge(s.id),
-    el('span', { className: 'journeys-legend-desc', text: s.description }),
-  ])));
+  const legend = el('dl', { className: 'journeys-legend' }, data.statuses.flatMap((s) => [
+    el('dt', { text: s.id }),
+    el('dd', { text: s.description }),
+  ]));
 
-  const grid = el('div', { className: 'journeys-cap-grid' }, data.capabilityGroups.map((group) => {
-    const headingId = `cap-group-${slug(group.id)}`;
-    const caps = data.capabilities.filter((c) => c.group === group.id);
-    return el('section', { className: 'journeys-cap-group', 'aria-labelledby': headingId }, [
-      el('h3', { id: headingId, text: group.id }),
-      el('p', { className: 'journeys-cap-group-summary', text: group.summary }),
-      el('ul', { className: 'journeys-cap-list' }, caps.map((cap) => {
-        const n = usage.get(cap.id) || 0;
-        let usedText = label('notUsed');
-        if (n === 1) usedText = label('usedInOne');
-        else if (n > 1) usedText = label('usedIn', { count: n });
-        return el('li', { className: 'journeys-cap', id: `cap-${cap.id}` }, [
-          el('div', { className: 'journeys-cap-head' }, [
-            el('h4', { text: cap.name }),
-            statusBadge(cap.status),
-          ]),
-          el('p', { className: 'journeys-cap-summary', text: cap.summary }),
-          el('div', { className: 'journeys-cap-foot' }, [
-            el('span', { className: 'journeys-tags' }, cap.products.map(productTag)),
-            el('span', { className: 'journeys-cap-usage', text: usedText }),
-          ]),
-        ]);
-      })),
-    ]);
-  }));
+  const rows = data.capabilityGroups.flatMap((group) => [
+    el('tr', { className: 'journeys-group-row' }, el('th', { colspan: '4', scope: 'colgroup' }, [
+      group.id,
+      el('span', { text: ` — ${group.summary}` }),
+    ])),
+    ...data.capabilities.filter((c) => c.group === group.id).map((cap) => el('tr', { id: `cap-${slug(cap.id)}` }, [
+      el('th', { scope: 'row' }, [cap.name, el('span', { className: 'journeys-cap-summary', text: cap.summary })]),
+      el('td', { className: `journeys-status${cap.status === 'Current' ? '' : ' is-caution'}`, text: cap.status }),
+      el('td', { text: cap.products.join(', ') }),
+      el('td', { text: String(usage.get(cap.id) || 0) }),
+    ])),
+  ]);
 
-  block.replaceChildren(legend, grid);
+  const table = el('table', { className: 'journeys-table' }, [
+    el('thead', {}, el('tr', {}, [
+      el('th', { scope: 'col', text: label('capabilities') }),
+      el('th', { scope: 'col', text: label('status') }),
+      el('th', { scope: 'col', text: label('supportedBy') }),
+      el('th', { scope: 'col', text: label('plays') }),
+    ])),
+    el('tbody', {}, rows),
+  ]);
+
+  block.replaceChildren(legend, el('div', { className: 'journeys-table-wrap' }, table));
 }
 
 /**
