@@ -65,8 +65,8 @@ async function locationOptions(cell) {
   const link = cell?.querySelector('a[href$=".json"]');
   if (!link) return listOptions(cell);
   try {
-    const path = new URL(link.href).pathname;
-    const resp = await fetch(path);
+    // resolve against this site, not the page hosting the block (aem-embed)
+    const resp = await fetch(new URL(new URL(link.href).pathname, import.meta.url));
     if (!resp.ok) throw new Error(resp.status);
     const { data = [] } = await resp.json();
     return data.filter((l) => l.id).map((l) => ({
@@ -118,8 +118,9 @@ function panel(title, ...children) {
 }
 
 function validateField(field, cells) {
-  const error = document.getElementById(`${field.id}-error`)
-    || (field.type === 'radio' && document.getElementById(`booking-${field.name}-error`));
+  const root = field.getRootNode(); // document, or the shadow root when embedded
+  const error = root.getElementById(`${field.id}-error`)
+    || (field.type === 'radio' && root.getElementById(`booking-${field.name}-error`));
   let message = '';
   const value = field.type === 'checkbox' ? field.checked : field.value.trim();
   if (field.type === 'radio') {
@@ -163,8 +164,11 @@ function validateScope(scope, cells) {
   return invalid.length === 0;
 }
 
-function prefill(form) {
+function prefill(form, block) {
   const params = new URLSearchParams(window.location.search);
+  // when embedded (aem-embed), the host element passes prefill values in data-query
+  const query = block.getRootNode().host?.dataset.query;
+  new URLSearchParams(query || '').forEach((value, key) => params.set(key, value));
   params.forEach((raw, key) => {
     const value = toClassName(raw);
     const match = (v) => v === raw || toClassName(v) === value || toClassName(v).split('-').includes(value);
@@ -356,7 +360,7 @@ export default async function decorate(block) {
     done.focus();
   });
 
-  prefill(form);
+  prefill(form, block);
   show(0, false);
 
   const layout = createTag('div', { class: 'booking-layout' }, form);

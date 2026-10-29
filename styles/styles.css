@@ -17,7 +17,8 @@
    3. Semantic light/dark mappings
    ========================================================================== */
 
-:root {
+:root,
+:host {
   /* ---- 1. Brand primitives ---- */
   --ink-1000: #07060d;
   --ink-950: #0e0c1a;
@@ -131,6 +132,7 @@
 
 /* ---- 3. Semantic mappings: light (default) ---- */
 :root,
+:host,
 [data-theme='light'] {
   color-scheme: light;
 
@@ -237,7 +239,8 @@ main > .section.flame,
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root {
+  :root,
+  :host {
     --duration-1: 0.01ms;
     --duration-2: 0.01ms;
     --duration-3: 0.01ms;
