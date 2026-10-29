@@ -7,7 +7,16 @@ helix-importer-ui
 .DS_Store
 *.bak
 .idea
+.playwright-mcp
+.playwright-cli
+.wrangler
+.dev.vars
 
 # Ensure these files are tracked
 !CLAUDE.md
 !AGENTS.md
+tasks/lessons.md
+tasks/todo.md
+
+# Local authored content for `aem up --html-folder drafts` (lives in DA, not git)
+drafts/

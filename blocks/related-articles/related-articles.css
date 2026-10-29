@@ -1,0 +1,302 @@
+/* Related articles block – default slider, mobile-first */
+
+main .related-articles {
+  width: 100%;
+  max-width: min(100% - 2 * var(--gutter), var(--container));
+  margin: 0 auto;
+  padding: var(--gap-s) var(--gutter);
+}
+
+main .related-articles .related-articles-slider {
+  position: relative;
+}
+
+/* List – horizontal scroll by default */
+main .related-articles .related-articles-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  gap: var(--gap-m);
+  padding-bottom: var(--gap-2xs);
+  scroll-padding-inline: var(--gutter);
+}
+
+/* Card */
+main .related-articles .related-articles-card {
+  flex: 0 0 min(86%, 360px);
+  scroll-snap-align: start;
+  margin: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--gap-s);
+  overflow: clip;
+  background: var(--color-surface);
+  transition: transform 0.4s var(--ease-out),
+    border-color 0.3s ease,
+    box-shadow 0.4s ease;
+}
+
+/* Card link */
+main .related-articles .related-articles-card-link {
+  color: inherit;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+main .related-articles .related-articles-card-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+  border-radius: var(--gap-s);
+}
+
+/* Card accent strip */
+main .related-articles .related-articles-card-strip {
+  block-size: var(--gap-2xs);
+  background: var(--color-accent);
+}
+
+/* Card content */
+main .related-articles .related-articles-card-content {
+  padding: var(--gap-s);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-2xs);
+  height: 100%;
+}
+
+/* Heading */
+main .related-articles .related-articles-card h3 {
+  margin: 0;
+  font-size: var(--step-1);
+  line-height: 1.2;
+}
+
+/* Description */
+main .related-articles .related-articles-card-description {
+  margin: 0;
+  line-height: 1.55;
+  color: var(--color-text);
+}
+
+/* Date */
+main .related-articles .related-articles-card-date {
+  margin: auto 0 0;
+  font-size: var(--step-n2);
+  color: var(--color-text-muted);
+}
+
+/* Hover & focus */
+main .related-articles .related-articles-card:hover,
+main .related-articles .related-articles-card:focus-within {
+  transform: translateY(-6px);
+  border-color: var(--color-accent);
+  box-shadow: 0 20px 40px color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+
+/* Empty state */
+main .related-articles .related-articles-empty {
+  margin: var(--gap-s) 0 0;
+}
+
+/* Slider controls */
+main .related-articles .related-articles-controls {
+  display: flex;
+  justify-content: space-between;
+  position: absolute;
+  inset: 50% 0 auto;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 2;
+  padding-inline: var(--gap-3xs);
+}
+
+main .related-articles .related-articles-arrow {
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 72%, transparent);
+  color: inherit;
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: 999px;
+  padding: 0;
+  font-size: 22px;
+  line-height: 1;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 14%);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: opacity 0.25s, transform 0.25s var(--ease-out),
+    border-color 0.25s;
+}
+
+main .related-articles .related-articles-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+main .related-articles .related-articles-arrow:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  transform: scale(1.08);
+}
+
+main .related-articles .related-articles-arrow.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: scale(0.9);
+}
+
+@media (width >= 600px) {
+  main .related-articles .related-articles-card {
+    flex-basis: min(88%, 360px);
+  }
+}
+
+@media (width >= 900px) {
+  main .related-articles {
+    padding-inline: 0;
+  }
+
+  main .related-articles .related-articles-card {
+    flex-basis: min(32%, 380px);
+  }
+
+  main .related-articles .related-articles-card-content {
+    padding: var(--gap-m);
+  }
+
+  main .related-articles .related-articles-arrow {
+    inline-size: 52px;
+    block-size: 52px;
+    font-size: 24px;
+  }
+}
+
+/* ==========================================================================
+   Bento variant – Heritage Elite grid layout
+   ========================================================================== */
+
+main .related-articles.bento .related-articles-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  overflow-x: visible;
+  overscroll-behavior-x: auto;
+  scroll-snap-type: none;
+  padding-bottom: 0;
+}
+
+main .related-articles.bento .related-articles-card {
+  flex: none;
+  border: var(--border);
+  border-radius: var(--radius-l);
+  background: var(--color-surface-sunken);
+  transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+main .related-articles.bento .related-articles-card-link:focus-visible {
+  outline-color: var(--color-accent);
+  border-radius: var(--radius-l);
+}
+
+main .related-articles.bento .related-articles-card-content {
+  padding: 30px;
+}
+
+/* Keyword tag */
+main .related-articles.bento .related-articles-card-tag {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: var(--color-accent-text);
+  margin: 0 0 var(--gap-3xs);
+}
+
+/* Heading */
+main .related-articles.bento .related-articles-card h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.4rem;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  color: var(--color-text-strong);
+}
+
+/* Description */
+main .related-articles.bento .related-articles-card-description {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--color-text);
+  opacity: 0.8;
+}
+
+/* Date */
+main .related-articles.bento .related-articles-card-date {
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+  letter-spacing: 1px;
+}
+
+/* Hover & focus */
+main .related-articles.bento .related-articles-card:hover,
+main .related-articles.bento .related-articles-card:focus-within {
+  transform: translateY(-8px);
+  border-color: var(--color-accent);
+  box-shadow: 0 30px 60px -12px color-mix(in srgb, var(--color-accent) 15%, transparent);
+}
+
+/* Featured (first) card */
+main .related-articles.bento .related-articles-card-featured .related-articles-card-content {
+  padding: 35px;
+}
+
+main .related-articles.bento .related-articles-card-featured h3 {
+  font-size: 1.8rem;
+}
+
+/* Tablet: 2-column grid */
+@media (width >= 600px) {
+  main .related-articles.bento .related-articles-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  main .related-articles.bento .related-articles-card-featured {
+    grid-column: span 2;
+  }
+}
+
+/* Desktop: 3-column grid */
+@media (width >= 900px) {
+  main .related-articles.bento .related-articles-card-content {
+    padding: 40px;
+  }
+
+  main .related-articles.bento .related-articles-card-featured .related-articles-card-content {
+    padding: 45px;
+  }
+
+  main .related-articles.bento .related-articles-card-featured h3 {
+    font-size: 2.2rem;
+  }
+
+  main .related-articles.bento .related-articles-card h3 {
+    font-size: 1.6rem;
+  }
+
+  main .related-articles.bento .related-articles-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Wide */
+@media (width >= 1200px) {
+  main .related-articles.bento .related-articles-card-featured h3 {
+    font-size: 2.4rem;
+  }
+}

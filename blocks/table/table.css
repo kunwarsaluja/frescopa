@@ -1,0 +1,99 @@
+.table {
+  width: 100%;
+  overflow-x: auto;
+  border: var(--border);
+  border-radius: var(--radius-l);
+  background: var(--color-surface);
+}
+
+.table:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.table table {
+  width: 100%;
+  min-width: 40rem;
+  border-collapse: collapse;
+  font-size: var(--step-n1);
+}
+
+.table caption {
+  padding: var(--gap-s);
+  color: var(--color-text-muted);
+  text-align: left;
+}
+
+.table caption p {
+  margin: 0;
+}
+
+.table th,
+.table td {
+  padding: var(--gap-2xs) var(--gap-s);
+  border-bottom: var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.table thead th {
+  background: var(--color-surface-sunken);
+  color: var(--color-text-strong);
+  font-weight: var(--weight-bold);
+}
+
+.table tbody th {
+  color: var(--color-text-strong);
+  font-weight: var(--weight-semibold);
+}
+
+.table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.table th p,
+.table td p {
+  margin: 0;
+}
+
+.table td p + p {
+  margin-top: var(--gap-3xs);
+}
+
+/* bordered variant */
+.table.bordered th,
+.table.bordered td {
+  border: var(--border);
+}
+
+/* no header variant */
+.table.no-header tbody tr > :first-child {
+  width: 35%;
+}
+
+/* striped variant */
+.table.striped tbody tr:nth-child(odd) > * {
+  background: var(--color-surface-sunken);
+}
+
+/* compare variant */
+.table.compare tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--color-surface);
+}
+
+.table.compare thead th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.table.compare .is-featured {
+  background: color-mix(in srgb, var(--color-accent-soft) 55%, var(--color-surface));
+}
+
+.table.compare thead th.is-featured {
+  color: var(--color-accent-hover);
+}

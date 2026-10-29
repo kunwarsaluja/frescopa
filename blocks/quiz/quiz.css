@@ -1,0 +1,292 @@
+/* Quiz block – scoped to .quiz per AGENTS.md */
+.quiz {
+  position: relative;
+  max-width: min(100% - 2 * var(--gutter), var(--container));
+  margin: 0 auto;
+  padding: var(--gap-2xs) var(--gutter);
+}
+
+.quiz .quiz-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.quiz .quiz-form {
+  display: grid;
+  gap: var(--gap-s);
+  min-width: 0;
+}
+
+/* ── Slider shell ── */
+.quiz .quiz-slider-shell {
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface-sunken);
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.quiz .quiz-slider {
+  overflow: hidden;
+}
+
+.quiz .quiz-slider-track {
+  display: flex;
+  width: 100%;
+  align-items: stretch;
+  transition: transform 0.45s var(--ease-out);
+}
+
+/* ── Question card ── */
+.quiz .quiz-question {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  padding: var(--gap-s);
+  background: transparent;
+  min-inline-size: 0;
+}
+
+.quiz .quiz-slider-track > .quiz-question {
+  flex: 0 0 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* Single-question layout keeps its own card treatment */
+.quiz .quiz-questions-list > .quiz-question {
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface-sunken);
+  box-shadow: var(--shadow-2);
+}
+
+/* ── Nav bar ── */
+.quiz .quiz-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-2xs);
+  padding: 12px var(--gap-s);
+  border-top: 1px solid var(--color-border);
+}
+
+.quiz .quiz-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font: inherit;
+  font-size: var(--step-n1);
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.quiz .quiz-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.quiz .quiz-nav-btn:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-text-strong);
+}
+
+.quiz .quiz-nav-btn.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Progress dots */
+.quiz .quiz-nav-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.quiz .quiz-nav-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-border-strong);
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.quiz .quiz-nav-dot.is-active {
+  background: var(--color-accent);
+  transform: scale(1.35);
+}
+
+/* ── Question title ── */
+.quiz .quiz-question-title {
+  display: block;
+  width: 100%;
+  margin: 0 0 var(--gap-2xs);
+  padding: var(--gap-s) 0 0;
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  font-weight: 600;
+  text-align: center;
+  overflow-wrap: break-word;
+}
+
+.quiz .quiz-instruction {
+  margin: calc(-1 * var(--gap-3xs)) 0 var(--gap-3xs);
+  font-size: var(--step-n1);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+/* ── Options ── */
+.quiz .quiz-options {
+  display: grid;
+  gap: var(--gap-3xs);
+}
+
+.quiz .quiz-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--color-border);
+  border-radius: 999px;
+  padding: 10px 20px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.25s, background-color 0.25s, color 0.25s;
+}
+
+.quiz .quiz-option:hover {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.quiz .quiz-option:has(input:checked) {
+  border-color: var(--color-accent-fill);
+  background: var(--color-accent-fill);
+  color: var(--color-on-accent);
+}
+
+.quiz .quiz-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+
+.quiz .quiz-option-label {
+  font-size: var(--step-0);
+  line-height: 1.35;
+  overflow-wrap: break-word;
+}
+
+.quiz .quiz-option.is-selected.is-correct {
+  border-color: var(--color-success);
+  background: var(--color-success-soft);
+  color: var(--color-text-strong);
+}
+
+.quiz .quiz-option.is-selected.is-wrong {
+  border-color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+  color: var(--color-text-strong);
+}
+
+/* ── Feedback ── */
+.quiz .quiz-feedback-slot {
+  margin-top: var(--gap-2xs);
+}
+
+.quiz .quiz-feedback {
+  margin: var(--gap-2xs) 0 0;
+  font-size: var(--step-n1);
+  font-weight: 500;
+  text-align: center;
+}
+
+.quiz .quiz-feedback.is-correct {
+  color: var(--color-success);
+}
+
+.quiz .quiz-feedback.is-incorrect {
+  color: var(--color-danger);
+}
+
+/* ── Complete banner ── */
+.quiz .quiz-complete-banner {
+  margin: 0;
+  padding: var(--gap-s);
+  font-size: var(--step-n1);
+  font-weight: 500;
+  text-align: center;
+  border-top: 1px solid var(--color-border);
+}
+
+.quiz .quiz-complete-banner.is-success {
+  background: var(--color-success-soft);
+  color: var(--color-text-strong);
+}
+
+.quiz .quiz-complete-banner.is-retry {
+  background: var(--color-accent-soft);
+  color: var(--color-text-strong);
+}
+
+/* ── Submit ── */
+.quiz .quiz-submit {
+  justify-self: start;
+  border: 1px solid var(--color-accent-fill);
+  border-radius: var(--radius-pill);
+  padding: 10px 20px;
+  font: inherit;
+  font-size: var(--step-n1);
+  font-weight: 600;
+  color: var(--color-on-accent);
+  background: var(--color-accent-fill);
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+
+.quiz .quiz-submit:hover {
+  background: var(--color-accent-fill-hover);
+  border-color: var(--color-accent-fill-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px var(--color-accent-glow);
+}
+
+.quiz .quiz-submit[hidden] {
+  display: none;
+}
+
+.quiz .quiz-empty {
+  margin: 0;
+}
+
+@media (width >= 900px) {
+  .quiz {
+    padding-inline: 0;
+  }
+
+  .quiz .quiz-question {
+    padding: var(--gap-m);
+  }
+
+  .quiz .quiz-nav {
+    padding-inline: var(--gap-m);
+  }
+}

@@ -4,7 +4,6 @@
  * https://www.aem.live/developer/block-collection/fragment
  */
 
-// eslint-disable-next-line import/no-cycle
 import {
   decorateMain,
 } from '../../scripts/scripts.js';
@@ -13,14 +12,16 @@ import {
   loadSections,
 } from '../../scripts/aem.js';
 
+import dynamicBlocks from '../dynamic/index.js';
+
 /**
  * Loads a fragment.
  * @param {string} path The path to the fragment
- * @returns {HTMLElement} The root element of the fragment
+ * @returns {Promise<HTMLElement>} The root element of the fragment
  */
 export async function loadFragment(path) {
   if (path && path.startsWith('/') && !path.startsWith('//')) {
-    const resp = await fetch(`${path}.plain.html`);
+    const resp = await fetch(`${path.replace(/#.*$/, '')}.plain.html`);
     if (resp.ok) {
       const main = document.createElement('main');
       main.innerHTML = await resp.text();
@@ -46,19 +47,9 @@ export default async function decorate(block) {
   const link = block.querySelector('a');
   const path = link ? link.getAttribute('href') : block.textContent.trim();
   const fragment = await loadFragment(path);
-  if (!fragment) return;
-
-  const wrapper = block.closest('.fragment-wrapper');
-  const section = wrapper.closest('.section');
-
-  if (section && section.children.length === 1) {
-    // fragment is the ONLY child of its section; replace the whole section
-    section.replaceWith(...fragment.childNodes);
-  } else {
-    // fragment shares section with other children; flatten children into it
-    fragment.querySelectorAll(':scope > .section').forEach((fragSection) => {
-      [...fragSection.childNodes].forEach((child) => wrapper.before(child));
-    });
-    wrapper.remove();
+  if (fragment) {
+    block.replaceChildren(...fragment.childNodes);
+    const main = block.closest('main');
+    if (main) await dynamicBlocks(main);
   }
 }

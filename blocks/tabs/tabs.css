@@ -1,0 +1,96 @@
+/* Tabs: pill tablist + panels (block mode and section-metadata mode) */
+.tabs .tabs-list {
+  display: flex;
+  gap: var(--gap-3xs);
+  width: fit-content;
+  max-width: 100%;
+  padding: var(--gap-3xs);
+  overflow-x: auto;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.tabs .tabs-list::-webkit-scrollbar {
+  display: none;
+}
+
+.tabs .tabs-list [role='tab'] {
+  flex: none;
+  min-height: 2.75rem;
+  margin: 0;
+  padding: 0.5em 1.1em;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--step-n1);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--duration-1) var(--ease-out), color var(--duration-1) var(--ease-out);
+}
+
+.tabs .tabs-list [role='tab']:hover {
+  color: var(--color-text-strong);
+}
+
+.tabs .tabs-list [role='tab'][aria-selected='true'] {
+  background: var(--color-text-strong);
+  color: var(--color-bg);
+}
+
+.tabs .tabs-list [role='tab']:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.tabs .tabs-content {
+  margin-top: var(--gap-xl);
+}
+
+.tabs .tab[role='tabpanel'][aria-hidden='true'],
+.tabs .tab[role='tabpanel'][hidden] {
+  display: none;
+}
+
+.tabs .tab[role='tabpanel']:focus-visible {
+  border-radius: var(--radius-m);
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Sections moved into a panel keep their content, not their page spacing */
+.tabs .tab > .section {
+  margin: 0;
+  padding: 0;
+  background: none;
+}
+
+.tabs .tab > .section > div {
+  width: auto;
+  margin-inline: 0;
+}
+
+.tabs .tab > .section > div + div {
+  margin-top: var(--gap-l);
+}
+
+.tabs .tab > .section > .default-content-wrapper > :first-child {
+  margin-top: 0;
+}
+
+@media (width >= 900px) {
+  .tabs .tabs-list [role='tab'] {
+    padding-inline: 1.4em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabs .tabs-list {
+    scroll-behavior: auto;
+  }
+}

@@ -1,0 +1,86 @@
+/* Social share: floating dock — bottom bar on mobile, side rail from 900px */
+main .social-share {
+  position: fixed;
+  inset: auto auto calc(env(safe-area-inset-bottom, 0px) + var(--gap-s)) 50%;
+  z-index: 950;
+  transform: translateX(-50%);
+}
+
+main .social-share .social-share-list {
+  display: flex;
+  gap: var(--gap-2xs);
+  margin: 0;
+  padding: var(--gap-2xs);
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-3);
+  list-style: none;
+}
+
+main .social-share .social-share-item {
+  display: flex;
+}
+
+main .social-share .social-share-action {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-1) var(--ease-out),
+    color var(--duration-1) var(--ease-out);
+}
+
+main .social-share .social-share-action:hover {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+}
+
+main .social-share .social-share-action:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+main .social-share .social-share-action svg {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+
+main .social-share.is-copied .social-share-action-copy {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+main .social-share.is-copy-error .social-share-action-copy {
+  color: var(--color-danger);
+}
+
+main .social-share .social-share-sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  border: 0;
+  white-space: nowrap;
+}
+
+@media (width >= 900px) {
+  main .social-share {
+    inset: 50% var(--gap-m) auto auto;
+    transform: translateY(-50%);
+  }
+
+  main .social-share .social-share-list {
+    flex-direction: column;
+  }
+}
