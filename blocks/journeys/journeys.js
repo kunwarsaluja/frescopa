@@ -4,12 +4,56 @@ const DEFAULT_SOURCE = '/studio/journeys.json';
 const ALL = '__all';
 const requests = new Map();
 
+const splitList = (value) => String(value || '').split(',').map((v) => v.trim()).filter(Boolean);
+
+/**
+ * Rebuilds the nested journey model from the authored multi-sheet
+ * (labels, statuses, products, groups, capabilities, journeys, steps, metrics).
+ * Steps and metrics link to their journey through the `journey` column.
+ * @param {Object} json multi-sheet response
+ */
+function fromSheets(json) {
+  const rows = (name) => json[name]?.data || [];
+  const byJourney = (name) => rows(name).reduce((map, row) => {
+    if (!map.has(row.journey)) map.set(row.journey, []);
+    map.get(row.journey).push(row);
+    return map;
+  }, new Map());
+  const steps = byJourney('steps');
+  const metrics = byJourney('metrics');
+  return {
+    labels: Object.fromEntries(rows('labels').map((r) => [r.key, r.value])),
+    statuses: rows('statuses'),
+    products: rows('products'),
+    capabilityGroups: rows('groups'),
+    capabilities: rows('capabilities').map((c) => ({ ...c, products: splitList(c.products) })),
+    journeys: rows('journeys').filter((j) => j.id).map((j) => ({
+      id: j.id,
+      title: j.title,
+      industryHints: splitList(j.industries),
+      problem: { quote: j.quote, persona: j.persona, context: j.context },
+      steps: (steps.get(j.id) || []).map((s) => ({
+        title: s.title,
+        narrative: s.narrative,
+        page: s.page,
+        capabilities: splitList(s.capabilities),
+        recipes: splitList(s.recipes),
+      })),
+      outcome: {
+        headline: j.outcome,
+        metrics: (metrics.get(j.id) || []).map(({ value, label }) => ({ value, label })),
+      },
+      tags: splitList(j.tags),
+    })),
+  };
+}
+
 function loadData(source) {
   if (!requests.has(source)) {
     requests.set(source, fetch(source, { cache: 'no-cache' }).then((resp) => {
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       return resp.json();
-    }));
+    }).then((json) => (json[':type'] === 'multi-sheet' ? fromSheets(json) : json)));
   }
   return requests.get(source);
 }
