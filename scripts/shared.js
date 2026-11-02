@@ -1,4 +1,4 @@
-import { getMetadata } from './aem.js';
+import { getMetadata, loadCSS } from './aem.js';
 
 /**
  * Market context from the URL: the first /{lang}/{region}/ pair in the path.
@@ -312,4 +312,28 @@ export function getBlockContext(block) {
     eventRoot: isEmbed ? root : document,
     isEmbed,
   };
+}
+
+/**
+ * Loads a stylesheet for an element. On a page it goes in <head>; inside an
+ * aem-embed shadow root it goes into that root, because <head> styles don't
+ * reach shadow DOM.
+ * @param {Element} el element the styles are for
+ * @param {string|URL} href resolve it with import.meta.url so it points at this
+ *   site even when the code runs on another page (aem-embed)
+ * @returns {Promise<void>}
+ */
+export function loadStylesFor(el, href) {
+  const { origin, pathname } = new URL(href, window.location.href);
+  const url = `${origin}${pathname}`;
+  const root = el.getRootNode();
+  // on the site's own pages, use the path so loadCSS recognises styles the block loader added
+  if (!(root instanceof ShadowRoot)) return loadCSS(origin === window.location.origin ? pathname : url);
+  if (root.querySelector(`link[href="${url}"]`)) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const link = createTag('link', { rel: 'stylesheet', href: url });
+    link.addEventListener('load', () => resolve());
+    link.addEventListener('error', reject);
+    root.append(link);
+  });
 }
