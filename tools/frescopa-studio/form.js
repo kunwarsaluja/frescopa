@@ -64,6 +64,7 @@ function control(node, engine) {
 
 function field(node, engine) {
   const input = control(node, engine);
+  input.dataset.label = node.label; // the plain label, for tools that decorate the field
   const labelText = el('span', { class: 'field-label' }, node.label, node.required && el('span', { class: 'field-required', 'aria-hidden': 'true' }, ' *'));
   if (node.kind === 'boolean') {
     return el('div', { class: 'field field-check' }, el('label', { for: input.id }, input, labelText), help(node), errorSlot(node));
@@ -125,12 +126,21 @@ function render(node, engine, rerender) {
   return field(node, engine);
 }
 
-/** Draws the whole form. Call again after adding, removing or moving list items. */
-export function renderForm(form, engine, focusAfter) {
-  const rerender = (next) => renderForm(form, engine, next);
+/**
+ * Draws the whole form; it redraws itself after list items are added, removed or moved.
+ * @param {HTMLFormElement} form
+ * @param {object} engine da-sc-sdk engine
+ * @param {object} [options]
+ * @param {(form: HTMLFormElement) => void} [options.decorate] runs after every draw,
+ *   e.g. to add a picker button next to a field (inputs carry data-pointer)
+ * @param {string} [options.focusAfter] selector to focus once drawn
+ */
+export function renderForm(form, engine, { decorate, focusAfter } = {}) {
+  const rerender = (next) => renderForm(form, engine, { decorate, focusAfter: next });
   const { root } = engine.getState().model;
   form.replaceChildren(...children(root, engine, rerender));
   showErrors(form, engine);
+  decorate?.(form);
   if (focusAfter) form.querySelector(focusAfter)?.focus();
 }
 

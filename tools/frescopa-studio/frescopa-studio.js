@@ -16,6 +16,10 @@ const DA_ADMIN = 'https://admin.da.live';
 const AEM_ADMIN = 'https://admin.hlx.page';
 const SCHEMA = 'frescopa-app';
 const DOCUMENT = '/en/us/app/experience';
+// Fields that hold a fragment path get a Choose button that opens the fragment picker
+// plugin from AEM Apps (https://github.com/adobe-rnd/aem-apps/tree/main/tools/plugins/fragments).
+const FRAGMENT_FIELDS = ['/data/announcement', '/data/featured'];
+const FRAGMENT_PICKER = new URL('https://main--aem-apps--adobe-rnd.aem.live/tools/plugins/fragments/fragments.html');
 const APP = window.location.hostname === 'localhost'
   ? 'http://localhost:4321/app/'
   : 'https://kunwarsaluja.github.io/frescopa-app/app/';
@@ -35,6 +39,9 @@ const TEXT = {
   schemaFailed: (status) => `Couldn’t read the "${SCHEMA}" schema (${status}).`,
   noSchema: `The "${SCHEMA}" schema isn’t in DA yet. Add it with the Schema Editor app.`,
   phoneNote: 'Your changes show here as you type. Preview and Publish update the app for everyone else.',
+  choose: 'Choose',
+  chooseFragment: (label) => `Choose a fragment: ${label}`,
+  closePicker: 'Close',
 };
 
 const { context, token } = await DA_SDK;
@@ -81,6 +88,90 @@ function saveDocument(engine) {
   const body = new FormData();
   body.append('data', new Blob([html], { type: 'text/html' }));
   return fetch(`${DA_ADMIN}/source/${org}/${site}${DOCUMENT}.html`, { method: 'POST', headers: auth, body });
+}
+
+/**
+ * Opens the fragment picker plugin in a dialog and hosts it the way DA's library does:
+ * it gets the DA context and token over a MessagePort, and sends back the link to
+ * insert (sendHTML), then closeLibrary. Resolves with the fragment's path, or null.
+ */
+function chooseFragment(title) {
+  return new Promise((resolve) => {
+    const frame = document.createElement('iframe');
+    // no allow-top-navigation: the picker can't move the DA tab elsewhere
+    frame.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms';
+    frame.referrerPolicy = 'no-referrer';
+    frame.src = FRAGMENT_PICKER.href;
+    frame.title = title;
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'studio-button';
+    close.textContent = TEXT.closePicker;
+    const dialog = document.createElement('dialog');
+    dialog.className = 'picker';
+    dialog.setAttribute('aria-label', title);
+    dialog.append(close, frame);
+
+    let path = null;
+    const finish = () => {
+      dialog.close();
+      dialog.remove();
+      resolve(path);
+    };
+    close.addEventListener('click', finish);
+    dialog.addEventListener('cancel', finish); // Escape, while focus is outside the picker
+
+    frame.addEventListener('load', () => {
+      const channel = new MessageChannel();
+      channel.port1.onmessage = ({ data }) => {
+        if (data?.action === 'sendHTML') path = fragmentPath(data.details);
+        if (data?.action === 'closeLibrary') finish();
+      };
+      frame.contentWindow.postMessage({
+        ready: true, context: { org, repo: site, path: DOCUMENT }, token,
+      }, FRAGMENT_PICKER.origin, [channel.port2]);
+    }, { once: true });
+
+    document.body.append(dialog);
+    dialog.showModal();
+  });
+}
+
+/** The path of the fragment link the picker sends, if it's a page on this site. */
+function fragmentPath(html) {
+  const href = new DOMParser().parseFromString(String(html), 'text/html').querySelector('a[href]')?.getAttribute('href');
+  try {
+    const url = new URL(href);
+    const host = `https://main--${site}--${org}.aem.page`;
+    return url.origin === host && /^\/[^/]/.test(url.pathname) ? url.pathname : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Adds a Choose button next to each fragment field. */
+function addPickers(engine) {
+  return (form) => FRAGMENT_FIELDS.forEach((pointer) => {
+    const input = form.querySelector(`[data-pointer="${pointer}"]`);
+    if (!input) return;
+    const { label } = input.dataset;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'studio-button';
+    button.textContent = TEXT.choose;
+    button.setAttribute('aria-label', `${TEXT.choose}: ${label}`);
+    button.addEventListener('click', async () => {
+      const path = await chooseFragment(TEXT.chooseFragment(label));
+      if (!path) return;
+      input.value = path;
+      engine.setField(pointer, path);
+      input.focus();
+    });
+    const row = document.createElement('div');
+    row.className = 'field-row';
+    input.replaceWith(row);
+    row.append(input, button);
+  });
 }
 
 /** Preview, publish or status for the document, through the AEM admin API. */
@@ -218,7 +309,7 @@ async function init() {
     if (await lastEdited() > known) window.location.reload();
   });
   updatePhone = connectPhone(engine);
-  renderForm(form, engine);
+  renderForm(form, engine, { decorate: addPickers(engine) });
   if (!checkErrors()) await showPublishState();
 
   // Publishing goes through preview first, as in DA.
