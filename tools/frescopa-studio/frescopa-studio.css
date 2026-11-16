@@ -87,7 +87,7 @@ button, input, select, textarea { font: inherit; }
 }
 
 @media (width >= 900px) {
-  .studio { grid-template-columns: minmax(0, 1fr) 390px; }
+  .studio { grid-template-columns: minmax(0, 1fr) minmax(390px, 0.9fr); }
 
   .studio-phone {
     position: sticky;
@@ -96,20 +96,53 @@ button, input, select, textarea { font: inherit; }
   }
 }
 
-.studio-phone iframe {
+.studio-phone {
+  display: grid;
+  justify-items: center;
+}
+
+.studio-preview-bar:not([hidden]) {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.studio-select {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+/* the device at its own size, scaled to fit by frescopa-studio.js */
+.studio-stage:not([hidden]) {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  overflow: hidden;
+}
+
+.studio-stage iframe {
   display: block;
-  width: 390px;
-  max-width: 100%;
-  height: min(780px, calc(100vh - 140px));
+  box-sizing: content-box;
   border: 10px solid var(--ink);
   border-radius: 44px;
   background: #fff;
+  flex: none;
+  transform-origin: top center;
 }
+
+.studio-stage iframe[data-device="desktop"],
+.studio-stage iframe[data-device="car"] { border-radius: 16px; }
 
 .studio-phone-note {
   max-width: 390px;
   color: var(--muted);
   font-size: 13px;
+  text-align: center;
 }
 
 /* form */

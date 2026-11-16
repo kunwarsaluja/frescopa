@@ -21,8 +21,14 @@
   </header>
   <main class="studio">
     <form class="studio-form" id="form" novalidate></form>
-    <section class="studio-phone" aria-label="App preview">
-      <iframe id="phone" title="Frescopa app with your changes" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+    <section class="studio-phone" aria-label="Preview">
+      <div class="studio-preview-bar" id="preview-bar" hidden>
+        <select class="studio-select" id="channel" aria-label="Channel" hidden></select>
+        <select class="studio-select" id="device" aria-label="Device"></select>
+      </div>
+      <div class="studio-stage" id="stage" hidden>
+        <iframe id="phone" title="Preview" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+      </div>
       <p class="studio-phone-note" id="phone-note"></p>
     </section>
   </main>
