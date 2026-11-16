@@ -3,8 +3,7 @@
  */
 
 import { loadFragment } from '../fragment/fragment.js';
-import { loadCSS } from '../../scripts/aem.js';
-import { createTag, getBlockContext } from '../../scripts/shared.js';
+import { createTag, getBlockContext, loadStylesFor } from '../../scripts/shared.js';
 import dynamicBlocks from '../dynamic/index.js';
 
 const FRAGMENT_PREFIX = '/fragments/';
@@ -26,7 +25,7 @@ export function setupFragmentModal(el) {
 
   const { eventRoot } = getBlockContext(el);
 
-  loadCSS(`${window.hlx.codeBasePath}/blocks/modal/modal.css`);
+  loadStylesFor(el, new URL('./modal.css', import.meta.url));
 
   const closeBtn = createTag('button', { type: 'button', class: 'modal-close', 'aria-label': 'Close dialog' }, '×');
   const content = createTag('div', { class: 'modal-content' });
